@@ -1226,7 +1226,23 @@ void CDECL __wine_kernel_init(void)
             error == ERROR_INVALID_ADDRESS ||
             error == ERROR_NOT_ENOUGH_MEMORY)
         {
-            if (!getenv("WINEPRELOADRESERVE")) exec_process( main_exe_name );
+            if (getenv("I386_FALLBACK")) {
+                int i, argc;
+                char **args;
+                MESSAGE( "Running with wine-i386: %s\n", debugstr_w(main_exe_name) );
+                argc = __wine_main_argc + 1;
+                args = malloc(sizeof(char *) * (argc + 1));
+                args[argc] = NULL;
+                args[0] = "wine-i386";
+                for (i = 0; i < __wine_main_argc; i++) {
+                    args[i+1] = __wine_main_argv[i];
+                }
+                if (execvp(args[0], args)) {
+                    ERR( "unable to run wine-i386: %i, %s\n", errno, strerror(errno) );
+                }
+            } else if (!getenv("WINEPRELOADRESERVE")) {
+                exec_process( main_exe_name );
+            }
             /* if we get back here, it failed */
         }
         else if (error == ERROR_MOD_NOT_FOUND)
