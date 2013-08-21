@@ -1041,6 +1041,14 @@ static NTSTATUS check_architecture( const IMAGE_NT_HEADERS *nt )
     static const char *arch;
 
 #ifdef __i386__
+    if (nt->FileHeader.Machine == IMAGE_FILE_MACHINE_ARM ||
+        nt->FileHeader.Machine == IMAGE_FILE_MACHINE_THUMB ||
+        nt->FileHeader.Machine == IMAGE_FILE_MACHINE_ARMNT) {
+        if (! (nt->FileHeader.Characteristics & IMAGE_FILE_DLL)) {
+            setenv("ARM_FALLBACK", "1", 1);
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+    }
     if (nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386) return STATUS_SUCCESS;
     if (nt->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
     {
